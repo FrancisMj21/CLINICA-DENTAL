@@ -1,17 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PatientController;
+use App\Http\Controllers\AppointmentController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -19,8 +12,43 @@ Route::get('/', function () {
 
 Auth::routes();
 
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-//rutas para el admin
+/*
+|--------------------------------------------------------------------------
+| RUTAS PROTEGIDAS
+|--------------------------------------------------------------------------
+*/
 
-Route::get('/admin', [App\Http\Controllers\AdminController::class, 'index'])->name('admin.index')->middleware('auth');
+Route::middleware(['auth'])->group(function () {
+
+    Route::resource('appointments', AppointmentController::class);
+
+    /*
+    |--------------------------------------------------------------------------
+    | SOLO ADMIN
+    |--------------------------------------------------------------------------
+    */
+    Route::middleware(['role:admin'])->group(function () {
+
+        Route::resource('doctors', DoctorController::class);
+        // Aquí luego irán:
+        Route::resource('patients', PatientController::class);
+        // Route::resource('users', UserController::class);
+
+    });
+
+    Route::middleware(['auth','role:doctor'])->group(function () {
+    
+    Route::get('/doctor', function () {
+            return view('doctor.dashboard');
+        });
+    });
+
+    Route::middleware(['auth','role:patient'])->group(function () {
+        Route::get('/patient', function () {
+            return view('patient.dashboard');
+        });
+    });
+
+
+});

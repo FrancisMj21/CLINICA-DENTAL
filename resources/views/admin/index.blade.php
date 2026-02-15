@@ -1,4 +1,5 @@
-@extends('layouts.admin')
+@extends('layouts.app')
+
 @section('content')
     <div class="row">
         <h1>Panel principal</h1>
@@ -28,7 +29,7 @@
             <div class="small-box bg-info">
                 <div class="inner">
 
-                    <p>Docentes</p>
+                    <p>Doctores</p>
                 </div>
                 <div class="icon">
                     <i class="ion bi bi-file-person-fill"></i>
@@ -44,7 +45,7 @@
             <div class="small-box bg-info">
                 <div class="inner">
 
-                    <p>Cursos</p>
+                    <p>Pacientes</p>
                 </div>
                 <div class="icon">
                     <i class="ion bi bi-file-person-fill"></i>
