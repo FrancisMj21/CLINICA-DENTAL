@@ -88,7 +88,6 @@ class DoctorController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
         $doctor = Doctor::findOrFail($id);
 
         $request->validate([
@@ -100,18 +99,21 @@ class DoctorController extends Controller
             'nacionalidad' => 'nullable|string|max:255',
         ]);
 
-        $doctor->update([
-            'dni' => $request->dni,
-            'nombres' => $request->nombres,
-            'apellidos' => $request->apellidos,
-            'especialidad' => $request->especialidad,
-            'fecha_nacimiento' => $request->fecha_nacimiento,
-            'nacionalidad' => $request->nacionalidad,
-        ]);
+        $doctor->update($request->only([
+            'dni',
+            'nombres',
+            'apellidos',
+            'especialidad',
+            'fecha_nacimiento',
+            'nacionalidad'
+        ]));
 
         return redirect()->route('doctors.index')
             ->with('success', 'Doctor actualizado correctamente');
     }
+
+
+
 
     /**
      * Remove the specified resource from storage.

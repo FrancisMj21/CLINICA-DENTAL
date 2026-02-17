@@ -50,9 +50,18 @@
                value="{{ old('especialidad', $doctor->especialidad) }}">
     </div>
 
-    <div class="text-end">
-        <button type="submit" class="btn btn-success">
-            Actualizar
-        </button>
+    <div class="modal-footer justify-content-end gap-2">
+
+    <button type="button"
+            class="btn btn-light border"
+            data-bs-dismiss="modal">
+        Cancelar
+    </button>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Actualizar
+    </button>
+
     </div>
 </form>

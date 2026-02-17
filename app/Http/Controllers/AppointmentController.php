@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Appointment;
+use App\Models\Patient;
+use App\Models\User;
+use App\Models\Reason;
 
 class AppointmentController extends Controller
 {
@@ -11,17 +15,26 @@ class AppointmentController extends Controller
      */
     public function index()
     {
-        //
-        return view('appointments.index');
-        
-    }
+        $patients = Patient::all();
+        $doctors = User::where('role', 'doctor')->get();
+        $reasons = Reason::where('active', true)->get();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
+        $appointments = Appointment::with('patient')->get();
+
+        // Preparar los eventos para FullCalendar
+        $events = $appointments->map(function($appt) {
+            return [
+                'id' => $appt->id,
+                'title' => $appt->patient->nombres ?? 'Paciente',
+                'start' => $appt->start_time,
+                'end' => $appt->end_time,
+                'color' => '#198754', // verde, puedes cambiar según estado
+            ];
+        });
+
+        return view('appointments.index', compact(
+            'patients', 'doctors', 'reasons', 'appointments', 'events'
+        ));
     }
 
     /**
@@ -29,38 +42,45 @@ class AppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
+        $request->validate([
+            'patient_id' => 'required|exists:patients,id',
+            'doctor_id' => 'required|exists:users,id',
+            'reason_id' => 'required|exists:reasons,id',
+            'start_time' => 'required|date',
+            'end_time' => 'required|date|after:start_time',
+            'note' => 'nullable|string'
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // 🔒 Verificar cruce de citas del mismo doctor
+        $exists = Appointment::where('doctor_id', $request->doctor_id)
+            ->where(function ($query) use ($request) {
+                $query->whereBetween('start_time', [$request->start_time, $request->end_time])
+                      ->orWhereBetween('end_time', [$request->start_time, $request->end_time])
+                      ->orWhere(function ($q) use ($request) {
+                          $q->where('start_time', '<=', $request->start_time)
+                            ->where('end_time', '>=', $request->end_time);
+                      });
+            })
+            ->exists();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        if ($exists) {
+            return back()
+                ->withErrors(['start_time' => 'El doctor ya tiene una cita en ese horario.'])
+                ->withInput();
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $appointment = Appointment::create([
+        'patient_id' => $request->patient_id,
+        'doctor_id' => $request->doctor_id,
+        'reason_id' => $request->reason_id,
+        'start_time' => $request->start_time,
+        'end_time' => $request->end_time,
+        'duration' => $request->duration, // <-- agregar
+        'note' => $request->note,
+    ]);
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()
+            ->route('appointments.index')
+            ->with('success', 'Cita creada correctamente.');
     }
 }

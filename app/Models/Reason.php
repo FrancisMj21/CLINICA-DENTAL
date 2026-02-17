@@ -5,22 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Patient extends Model
+class Reason extends Model
 {
-    use HasFactory;
     protected $fillable = [
-    'user_id',
-    'dni',
-    'nombres',
-    'apellidos',
-    'fecha_nacimiento',
-    'nacionalidad'
-];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+        'name',
+        'default_duration',
+        'active'
+    ];
 
     public function appointments()
     {

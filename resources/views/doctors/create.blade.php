@@ -1,7 +1,6 @@
 <form action="{{ route('doctors.store') }}" method="POST">
     @csrf
 
-    <h5 class="mt-3">Datos de acceso</h5>
     <div class="mb-3">
         <label>Email</label>
         <input type="email" name="email" class="form-control" required>
@@ -39,7 +38,18 @@
         <input type="text" name="especialidad" class="form-control">
     </div>
 
-    <button type="submit" class="btn btn-success">
-        Guardar
+    <div class="modal-footer justify-content-end gap-2">
+
+    <button type="button"
+            class="btn btn-light border"
+            data-bs-dismiss="modal">
+        Cancelar
     </button>
+
+    <button type="submit"
+            class="btn btn-primary">
+        Actualizar
+    </button>
+
+    </div>
 </form>

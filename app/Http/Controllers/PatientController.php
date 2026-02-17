@@ -2,66 +2,89 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Patient;
 use Illuminate\Http\Request;
+use App\Models\Patient;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class PatientController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
         $patients = Patient::with('user')->latest()->paginate(10);
         return view('patients.index', compact('patients'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return view('patients.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'dni' => 'required|unique:patients',
+            'nombres' => 'required',
+            'apellidos' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6'
+        ]);
+
+        $user = User::create([
+            'name' => $request->nombres . ' ' . $request->apellidos,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'patient'
+        ]);
+
+        Patient::create([
+            'user_id' => $user->id,
+            'dni' => $request->dni,
+            'nombres' => $request->nombres,
+            'apellidos' => $request->apellidos,
+            'fecha_nacimiento' => $request->fecha_nacimiento,
+            'nacionalidad' => $request->nacionalidad,
+        ]);
+
+        return redirect()->route('patients.index')
+            ->with('success', 'Paciente creado correctamente');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        //
+        $patient = Patient::findOrFail($id);
+        return view('patients.edit', compact('patient'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
-        //
+        $patient = Patient::findOrFail($id);
+
+        $request->validate([
+            'dni' => 'required|string|max:20',
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'fecha_nacimiento' => 'nullable|date',
+            'nacionalidad' => 'nullable|string|max:255',
+        ]);
+
+        $patient->update($request->only([
+            'dni',
+            'nombres',
+            'apellidos',
+            'fecha_nacimiento',
+            'nacionalidad'
+        ]));
+
+        return redirect()->route('patients.index')
+            ->with('success', 'Paciente actualizado correctamente');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function destroy(Patient $patient)
     {
-        //
+        $patient->delete();
+
+        return redirect()->route('patients.index')
+            ->with('success', 'Paciente eliminado correctamente');
     }
 }
