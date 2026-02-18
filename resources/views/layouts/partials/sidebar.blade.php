@@ -15,7 +15,7 @@
                         <a href="{{ route('appointments.index') }}"
                            class="nav-link {{ request()->routeIs('appointments.*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-calendar"></i>
-                            <p>Citas</p>
+                            <p>Agenda</p>
                         </a>
                     </li>
 

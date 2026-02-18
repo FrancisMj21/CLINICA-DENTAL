@@ -31,17 +31,17 @@ class DoctorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+public function store(Request $request)
 {
     $request->validate([
-        'dni' => 'required|unique:doctors',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|min:6',
+        'dni' => 'required',
         'nombres' => 'required',
         'apellidos' => 'required',
-        'email' => 'required|email|unique:users',
-        'password' => 'required|min:6'
     ]);
 
-    // Crear usuario con rol doctor
+    // 1️⃣ Crear usuario
     $user = User::create([
         'name' => $request->nombres . ' ' . $request->apellidos,
         'email' => $request->email,
@@ -49,7 +49,7 @@ class DoctorController extends Controller
         'role' => 'doctor'
     ]);
 
-    // Crear perfil doctor
+    // 2️⃣ Crear doctor
     Doctor::create([
         'user_id' => $user->id,
         'dni' => $request->dni,
