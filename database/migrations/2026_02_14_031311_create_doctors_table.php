@@ -18,8 +18,12 @@ return new class extends Migration
             $table->string('nombres');
             $table->string('apellidos');
             $table->date('fecha_nacimiento');
-            $table->string('nacionalidad')->nullable();
-            $table->string('especialidad')->nullable();
+            $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('phone')->nullable();
+            $table->foreignId('specialty_id')
+                ->nullable()
+                ->constrained()
+                ->nullOnDelete();
             $table->timestamps();
         });
     }

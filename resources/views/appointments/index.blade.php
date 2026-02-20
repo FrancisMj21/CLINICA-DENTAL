@@ -87,6 +87,12 @@
                     📋
                 </button>
 
+                <button id="settingsBtn"
+                        class="btn btn-light border d-flex align-items-center justify-content-center material-btn"
+                        title="Configuración">
+                    <span class="material-icons">tune</span>
+                </button>
+
             </div>
 
         </div>

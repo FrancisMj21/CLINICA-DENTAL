@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Hash;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Doctor;
 use App\Models\User;
@@ -36,29 +37,35 @@ public function store(Request $request)
     $request->validate([
         'email' => 'required|email|unique:users,email',
         'password' => 'required|min:6',
-        'dni' => 'required',
+        'dni' => 'required|string|max:20|unique:doctors,dni',
         'nombres' => 'required',
         'apellidos' => 'required',
+        'specialty_id' => 'required|exists:specialties,id',
+        'phone' => 'nullable|digits_between:6,15',
+        'country_id' => 'nullable|exists:countries,id',
     ]);
 
-    // 1️⃣ Crear usuario
-    $user = User::create([
-        'name' => $request->nombres . ' ' . $request->apellidos,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'role' => 'doctor'
-    ]);
+     DB::transaction(function () use ($request) {
 
-    // 2️⃣ Crear doctor
-    Doctor::create([
-        'user_id' => $user->id,
-        'dni' => $request->dni,
-        'nombres' => $request->nombres,
-        'apellidos' => $request->apellidos,
-        'fecha_nacimiento' => $request->fecha_nacimiento,
-        'nacionalidad' => $request->nacionalidad,
-        'especialidad' => $request->especialidad,
-    ]);
+        $user = User::create([
+            'name' => $request->nombres . ' ' . $request->apellidos,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'doctor'
+        ]);
+
+        Doctor::create([
+            'user_id' => $user->id,
+            'dni' => $request->dni,
+            'nombres' => $request->nombres,
+            'apellidos' => $request->apellidos,
+            'fecha_nacimiento' => $request->fecha_nacimiento,
+            'specialty_id' => $request->specialty_id,
+            'country_id' => $request->country_id,
+            'phone' => $request->phone,
+        ]);
+
+    });
 
     return redirect()->route('doctors.index')
         ->with('success', 'Doctor creado correctamente');
@@ -91,29 +98,28 @@ public function store(Request $request)
         $doctor = Doctor::findOrFail($id);
 
         $request->validate([
-            'dni' => 'required|string|max:20',
+            'dni' => 'required|string|max:20|unique:doctors,dni,' . $doctor->id,
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
-            'especialidad' => 'required|string|max:255',
             'fecha_nacimiento' => 'nullable|date',
-            'nacionalidad' => 'nullable|string|max:255',
+            'specialty_id' => 'nullable|exists:specialties,id',
+            'country_id' => 'nullable|exists:countries,id',
+            'phone' => 'nullable|digits_between:6,15',
         ]);
 
         $doctor->update($request->only([
             'dni',
             'nombres',
             'apellidos',
-            'especialidad',
-            'fecha_nacimiento',
-            'nacionalidad'
+            'specialty_id',
+            'country_id',
+            'phone',
+            'fecha_nacimiento'
         ]));
 
         return redirect()->route('doctors.index')
             ->with('success', 'Doctor actualizado correctamente');
     }
-
-
-
 
     /**
      * Remove the specified resource from storage.
@@ -121,7 +127,10 @@ public function store(Request $request)
     public function destroy(Doctor $doctor)
     {
         //
+        DB::transaction(function () use ($doctor) {
+        $doctor->user()->delete();
         $doctor->delete();
+    });
 
         return redirect()->route('doctors.index')
             ->with('success', 'Doctor eliminado correctamente.');

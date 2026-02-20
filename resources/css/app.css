@@ -14,3 +14,26 @@
 .fc-highlight {
     background: transparent !important;
 }
+
+.material-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.material-btn::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    background: rgba(0,0,0,0.15);
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.material-btn:active::after {
+    transform: scale(2.5);
+    opacity: 1;
+    transition: transform 0.3s, opacity 0.5s;
+}

@@ -20,7 +20,8 @@ return new class extends Migration
             $table->string('nombres');
             $table->string('apellidos');
             $table->date('fecha_nacimiento')->nullable();
-            $table->string('nacionalidad')->nullable();
+            $table->foreignId('country_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('phone')->nullable();
 
             $table->timestamps();
         });

@@ -14,7 +14,8 @@ class Patient extends Model
     'nombres',
     'apellidos',
     'fecha_nacimiento',
-    'nacionalidad'
+    'country_id',
+    'phone'
 ];
 
     public function user()
@@ -25,5 +26,10 @@ class Patient extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+
+        public function country()
+    {
+        return $this->belongsTo(Country::class);
     }
 }

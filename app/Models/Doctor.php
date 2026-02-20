@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class Doctor extends Model
 {
     use HasFactory;
@@ -16,7 +17,9 @@ class Doctor extends Model
         'apellidos',
         'fecha_nacimiento',
         'nacionalidad',
-        'especialidad'
+        'country_id',
+        'phone',
+        'specialty_id'
     ];
 
     public function user()
@@ -28,4 +31,16 @@ class Doctor extends Model
     {
         return $this->hasMany(Appointment::class);
     }
+
+        public function country()
+    {
+        return $this->belongsTo(Country::class);
+    }
+
+    public function specialty()
+    {
+        return $this->belongsTo(Specialty::class);
+    }
+
+
 }

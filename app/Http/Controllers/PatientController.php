@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Patient;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
 {
@@ -23,28 +24,35 @@ class PatientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'dni' => 'required|unique:patients',
-            'nombres' => 'required',
-            'apellidos' => 'required',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:6'
-        ]);
+        'dni' => 'required|string|max:20|unique:patients,dni',
+        'nombres' => 'required',
+        'apellidos' => 'required',
+        'email' => 'required|email|unique:users',
+        'password' => 'required|min:6',
+        'country_id' => 'nullable|exists:countries,id',
+        'phone' => 'nullable|digits_between:6,15',
+    ]);
 
-        $user = User::create([
-            'name' => $request->nombres . ' ' . $request->apellidos,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'patient'
-        ]);
+        DB::transaction(function () use ($request) {
 
-        Patient::create([
-            'user_id' => $user->id,
-            'dni' => $request->dni,
-            'nombres' => $request->nombres,
-            'apellidos' => $request->apellidos,
-            'fecha_nacimiento' => $request->fecha_nacimiento,
-            'nacionalidad' => $request->nacionalidad,
-        ]);
+            $user = User::create([
+                'name' => $request->nombres . ' ' . $request->apellidos,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => 'patient'
+            ]);
+
+            Patient::create([
+                'user_id' => $user->id,
+                'dni' => $request->dni,
+                'nombres' => $request->nombres,
+                'apellidos' => $request->apellidos,
+                'fecha_nacimiento' => $request->fecha_nacimiento,
+                'country_id' => $request->country_id,
+                'phone' => $request->phone,
+            ]);
+
+        });
 
         return redirect()->route('patients.index')
             ->with('success', 'Paciente creado correctamente');
@@ -61,11 +69,12 @@ class PatientController extends Controller
         $patient = Patient::findOrFail($id);
 
         $request->validate([
-            'dni' => 'required|string|max:20',
+            'dni' => 'required|string|max:20|unique:patients,dni,' . $patient->id,
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'fecha_nacimiento' => 'nullable|date',
-            'nacionalidad' => 'nullable|string|max:255',
+            'country_id' => 'nullable|exists:countries,id',
+            'phone' => 'nullable|digits_between:6,15',
         ]);
 
         $patient->update($request->only([
@@ -73,16 +82,20 @@ class PatientController extends Controller
             'nombres',
             'apellidos',
             'fecha_nacimiento',
-            'nacionalidad'
+            'country_id',
+            'phone',
         ]));
 
         return redirect()->route('patients.index')
             ->with('success', 'Paciente actualizado correctamente');
     }
 
-    public function destroy(Patient $patient)
+        public function destroy(Patient $patient)
     {
-        $patient->delete();
+        DB::transaction(function () use ($patient) {
+            $patient->user()->delete();
+            $patient->delete();
+        });
 
         return redirect()->route('patients.index')
             ->with('success', 'Paciente eliminado correctamente');
